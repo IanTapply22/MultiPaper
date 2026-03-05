@@ -1,0 +1,4 @@
+name: MultiPaperProxy
+main: com.iantapply.multipaper.server.bungee.MultiPaperBungee
+version: 1.0.0
+author: IanTapply

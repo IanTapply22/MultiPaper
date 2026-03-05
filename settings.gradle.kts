@@ -29,7 +29,7 @@ if (!file(".git").exists()) {
 }
 
 rootProject.name = "multipaper"
-for (name in listOf("multipaper-api", "multipaper-server")) {
+for (name in listOf("multipaper-api", "multipaper-server", "multipaper-master", "multipaper-master-messaging-protocol")) {
     val projName = name.lowercase(Locale.ENGLISH)
     include(projName)
     findProject(":$projName")!!.projectDir = file(name)

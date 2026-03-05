@@ -10,6 +10,8 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/multipaper-api" />
+            <option value="$PROJECT_DIR$/multipaper-master" />
+            <option value="$PROJECT_DIR$/multipaper-master-messaging-protocol" />
             <option value="$PROJECT_DIR$/multipaper-server" />
           </set>
         </option>
