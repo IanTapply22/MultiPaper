@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: IanTapply22 <iantapply22@gmail.com>
+Date: Thu, 5 Mar 2026 17:40:49 -0500
+Subject: [PATCH] Fix opening a player's inventory
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftAbstractInventoryView.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftAbstractInventoryView.java
+index 981a4ab3afc06687f2fa8032a71d18aa1afc9185..742efe1f4f2f08f560743d9f9b53b4450aab0acf 100644
+--- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftAbstractInventoryView.java
++++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftAbstractInventoryView.java
+@@ -117,6 +117,12 @@ public abstract class CraftAbstractInventoryView implements InventoryView {
+             return rawSlot;
+         }
+ 
++        // MultiPaper start
++        if (getType() == InventoryType.PLAYER) {
++            numInTop = numInTop / 9 * 9;
++       }
++        // MultiPaper end
++
+         // Move down the slot index by the top size
+         int slot = rawSlot - numInTop;
+ 

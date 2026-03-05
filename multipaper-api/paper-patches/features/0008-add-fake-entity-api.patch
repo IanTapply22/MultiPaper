@@ -1,0 +1,35 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: IanTapply22 <iantapply22@gmail.com>
+Date: Thu, 5 Mar 2026 18:08:39 -0500
+Subject: [PATCH] add fake entity api
+
+
+diff --git a/src/main/java/org/bukkit/entity/Entity.java b/src/main/java/org/bukkit/entity/Entity.java
+index 5349a0b593e4ea597613944a9f9f562475f721d4..00e60ded6c7cc64cfceebaf83ba4f3db701140bb 100644
+--- a/src/main/java/org/bukkit/entity/Entity.java
++++ b/src/main/java/org/bukkit/entity/Entity.java
+@@ -466,6 +466,24 @@ public interface Entity extends Metadatable, CommandSender, Nameable, Persistent
+      */
+     boolean isInvisible();
+ 
++    // MultiPaper start - add fake entity api
++    /**
++     * Sets the entity as fake entity
++     * <p>
++     * once set external players can't interact or see this entity.
++     * <p>
++     * Warning: once set this can't be changed.
++     *
++     * @throws IllegalStateException when online player is passed
++     */
++    void setFake();
++
++    /**
++     * returns whatever the entity is a fake entity
++     */
++    boolean isFake();
++    // MultiPaper end
++
+     /**
+      * Sets this entity no physics status.
+      *

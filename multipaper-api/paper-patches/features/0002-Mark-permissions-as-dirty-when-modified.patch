@@ -1,0 +1,27 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: IanTapply22 <iantapply22@gmail.com>
+Date: Thu, 5 Mar 2026 17:36:37 -0500
+Subject: [PATCH] Mark permissions as dirty when modified
+
+
+diff --git a/src/main/java/org/bukkit/permissions/PermissibleBase.java b/src/main/java/org/bukkit/permissions/PermissibleBase.java
+index 75b77cc4fe189b4b6baa1af3663dc492e992a266..3f2c6f2a455f5d01902a4fa54998611b5459d493 100644
+--- a/src/main/java/org/bukkit/permissions/PermissibleBase.java
++++ b/src/main/java/org/bukkit/permissions/PermissibleBase.java
+@@ -21,6 +21,7 @@ public class PermissibleBase implements Permissible {
+     private final Permissible parent;
+     private final List<PermissionAttachment> attachments = new LinkedList<PermissionAttachment>();
+     private final Map<String, PermissionAttachmentInfo> permissions = new HashMap<String, PermissionAttachmentInfo>();
++    public boolean dirty = false; // MultiPaper
+ 
+     public PermissibleBase(@Nullable ServerOperator opable) {
+         this.opable = opable;
+@@ -177,6 +178,8 @@ public class PermissibleBase implements Permissible {
+         for (PermissionAttachment attachment : attachments) {
+             calculateChildPermissions(attachment.getPermissions(), false, attachment);
+         }
++
++        dirty = true; // MultiPaper
+     }
+ 
+     public synchronized void clearPermissions() {
