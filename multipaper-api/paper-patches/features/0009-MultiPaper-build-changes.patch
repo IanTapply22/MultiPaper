@@ -1,0 +1,19 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: IanTapply22 <iantapply22@gmail.com>
+Date: Thu, 5 Mar 2026 18:35:37 -0500
+Subject: [PATCH] MultiPaper build changes
+
+
+diff --git a/src/main/java/io/papermc/paper/ServerBuildInfo.java b/src/main/java/io/papermc/paper/ServerBuildInfo.java
+index 652ff54e7c50412503725d628bfe72ed03059790..20c28d6378d239f7b9bfe861a0cd39e013df5c37 100644
+--- a/src/main/java/io/papermc/paper/ServerBuildInfo.java
++++ b/src/main/java/io/papermc/paper/ServerBuildInfo.java
+@@ -17,7 +17,7 @@ public interface ServerBuildInfo {
+     /**
+      * The brand id for Paper.
+      */
+-    Key BRAND_PAPER_ID = Key.key("papermc", "paper");
++    Key BRAND_PAPER_ID = Key.key("multipapermc", "multipaper"); // MultiPaper
+ 
+     /**
+      * Gets the {@code ServerBuildInfo}.

@@ -49,6 +49,16 @@
      implementation("ca.spottedleaf:concurrentutil:0.0.8")
      implementation("org.jline:jline-terminal-ffm:3.27.1") // use ffm on java 22+
      implementation("org.jline:jline-terminal-jni:3.27.1") // fall back to jni on java 21
+@@ -193,7 +_,8 @@
+         val build = System.getenv("BUILD_NUMBER") ?: null
+         val buildTime = providers.environmentVariable("BUILD_STARTED_AT").map(Instant::parse).orElse(Instant.EPOCH).get()
+         val gitHash = git.exec(providers, "rev-parse", "--short=7", "HEAD").get().trim()
+-        val implementationVersion = "$mcVersion-${build ?: "DEV"}-$gitHash"
++        val buildNumber = System.getenv("BUILD_NUMBER") // MultiPaper
++        val implementationVersion = if (buildNumber != null) "MultiPaper-$mcVersion-$buildNumber" else "git-MultiPaper-\"$gitHash\"" // MultiPaper
+         val date = git.exec(providers, "show", "-s", "--format=%ci", gitHash).get().trim()
+         val gitBranch = git.exec(providers, "rev-parse", "--abbrev-ref", "HEAD").get().trim()
+         attributes(
 @@ -264,7 +_,7 @@
      jvmArgumentProviders.add(provider)
  }

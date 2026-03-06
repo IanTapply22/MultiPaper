@@ -3,6 +3,23 @@ From: IanTapply22 <iantapply22@gmail.com>
 Date: Thu, 5 Mar 2026 17:40:49 -0500
 Subject: [PATCH] Fix opening a player's inventory
 
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+index d86ebc4cd182076629eb8000267d7b1a38a06be1..4a6fbfb2ceec95a6daee844632215bc23af6f74c 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+@@ -1365,6 +1365,11 @@ public class CraftPlayer extends CraftHumanEntity implements Player, PluginMessa
+         return this.getHandle().fauxSleeping;
+     }
+ 
++    @Override
++    public boolean isLocalPlayer() {
++        return false;
++    }
++
+     @Override
+     public Location getRespawnLocation(final boolean loadLocationAndValidate) {
+         final ServerPlayer.RespawnConfig respawnConfig = this.getHandle().getRespawnConfig();
 diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftAbstractInventoryView.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftAbstractInventoryView.java
 index 981a4ab3afc06687f2fa8032a71d18aa1afc9185..742efe1f4f2f08f560743d9f9b53b4450aab0acf 100644
 --- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftAbstractInventoryView.java
