@@ -1,0 +1,41 @@
+--- a/net/minecraft/world/level/entity/PersistentEntitySectionManager.java
++++ b/net/minecraft/world/level/entity/PersistentEntitySectionManager.java
+@@ -13,10 +_,7 @@
+ import java.io.IOException;
+ import java.io.UncheckedIOException;
+ import java.io.Writer;
+-import java.util.List;
+-import java.util.Queue;
+-import java.util.Set;
+-import java.util.UUID;
++import java.util.*;
+ import java.util.function.Consumer;
+ import java.util.stream.Collectors;
+ import java.util.stream.Stream;
+@@ -31,7 +_,7 @@
+ 
+ public class PersistentEntitySectionManager<T extends EntityAccess> implements AutoCloseable {
+     static final Logger LOGGER = LogUtils.getLogger();
+-    final Set<UUID> knownUuids = Sets.newHashSet();
++    public final HashMap<UUID, T> knownUuids = new HashMap<>(); // MultiPaper - store the known entity
+     final LevelCallback<T> callbacks;
+     public final EntityPersistentStorage<T> permanentStorage;
+     private final EntityLookup<T> visibleEntityStorage;
+@@ -70,7 +_,7 @@
+ 
+     private boolean addEntityUuid(T entity) {
+         org.spigotmc.AsyncCatcher.catchOp("Entity add by UUID"); // Paper
+-        if (!this.knownUuids.add(entity.getUUID())) {
++        if (this.knownUuids.put(entity.getUUID(), entity) != null) {
+             LOGGER.warn("UUID of added entity already exists: {}", entity);
+             return false;
+         } else {
+@@ -339,7 +_,7 @@
+     }
+ 
+     public boolean isLoaded(UUID uuid) {
+-        return this.knownUuids.contains(uuid);
++        return this.knownUuids.containsKey(uuid);
+     }
+ 
+     public LevelEntityGetter<T> getEntityGetter() {
