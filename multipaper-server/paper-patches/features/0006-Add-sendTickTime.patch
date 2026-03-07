@@ -1,0 +1,27 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: IanTapply22 <iantapply22@gmail.com>
+Date: Sat, 7 Mar 2026 11:24:11 -0500
+Subject: [PATCH] Add sendTickTime
+
+
+diff --git a/src/main/java/com/iantapply/multipaper/MultiPaper.java b/src/main/java/com/iantapply/multipaper/MultiPaper.java
+index 2ac673dcafae02e19c829a93b09892a942fd66da..05707ba687a00416b3f816a8571d6492a767b929 100644
+--- a/src/main/java/com/iantapply/multipaper/MultiPaper.java
++++ b/src/main/java/com/iantapply/multipaper/MultiPaper.java
+@@ -1,5 +1,7 @@
+ package com.iantapply.multipaper;
+ 
++import com.iantapply.multipaper.mastermessagingprotocol.messages.masterbound.WriteTickTimeMessage;
++
+ public class MultiPaper {
+     private static MultiPaperConnection multiPaperConnection = null;
+ 
+@@ -10,4 +12,8 @@ public class MultiPaper {
+ 
+         return multiPaperConnection;
+     }
++
++    public static void sendTickTime(long time, double tps) {
++        getConnection().send(new WriteTickTimeMessage(time, (float) tps));
++    }
+ }
