@@ -1,0 +1,288 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: IanTapply22 <iantapply22@gmail.com>
+Date: Sat, 7 Mar 2026 10:38:01 -0500
+Subject: [PATCH] Add MultiPaperConnection
+
+
+diff --git a/src/main/java/com/iantapply/multipaper/ExternalServer.java b/src/main/java/com/iantapply/multipaper/ExternalServer.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..5925eaecccc7db6db40c67d8b3951b75d834dd03
+--- /dev/null
++++ b/src/main/java/com/iantapply/multipaper/ExternalServer.java
+@@ -0,0 +1,50 @@
++package com.iantapply.multipaper;
++
++public class ExternalServer {
++    private final String name;
++    private final boolean me;
++    private int averageTickTime;
++    private double tps;
++    private long lastAlive;
++
++    public ExternalServer(String name, boolean me) {
++        this.name = name;
++        this.me = me;
++    }
++
++    public int getAverageTickTime() {
++        return averageTickTime;
++    }
++
++    public void setAverageTickTime(int averageTickTime) {
++        this.averageTickTime = averageTickTime;
++    }
++
++    public long getLastAlive() {
++        return lastAlive;
++    }
++
++    public void setLastAlive(long lastAlive) {
++        this.lastAlive = lastAlive;
++    }
++
++    public String getName() {
++        return name;
++    }
++
++    public boolean isMe() {
++        return me;
++    }
++
++    public boolean isAlive() {
++        return getLastAlive() > System.currentTimeMillis() - 2500 && getTps() > 0;
++    }
++
++    public double getTps() {
++        return tps;
++    }
++
++    public void setTps(double tps) {
++        this.tps = tps;
++    }
++}
+diff --git a/src/main/java/com/iantapply/multipaper/MultiPaper.java b/src/main/java/com/iantapply/multipaper/MultiPaper.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..2ac673dcafae02e19c829a93b09892a942fd66da
+--- /dev/null
++++ b/src/main/java/com/iantapply/multipaper/MultiPaper.java
+@@ -0,0 +1,13 @@
++package com.iantapply.multipaper;
++
++public class MultiPaper {
++    private static MultiPaperConnection multiPaperConnection = null;
++
++    public static MultiPaperConnection getConnection() {
++        if (multiPaperConnection == null) {
++            multiPaperConnection = new MultiPaperConnection();
++        }
++
++        return multiPaperConnection;
++    }
++}
+diff --git a/src/main/java/com/iantapply/multipaper/MultiPaperConnection.java b/src/main/java/com/iantapply/multipaper/MultiPaperConnection.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..c76f91e77be97b1ccaedac9dcea674086682b45a
+--- /dev/null
++++ b/src/main/java/com/iantapply/multipaper/MultiPaperConnection.java
+@@ -0,0 +1,201 @@
++package com.iantapply.multipaper;
++
++import com.iantapply.multipaper.config.MultiPaperConfiguration;
++import com.iantapply.multipaper.mastermessagingprotocol.MessageBootstrap;
++import com.iantapply.multipaper.mastermessagingprotocol.messages.masterbound.HelloMessage;
++import com.iantapply.multipaper.mastermessagingprotocol.messages.masterbound.MasterBoundMessage;
++import com.iantapply.multipaper.mastermessagingprotocol.messages.masterbound.MasterBoundProtocol;
++import com.iantapply.multipaper.mastermessagingprotocol.messages.masterbound.PingMessage;
++import com.iantapply.multipaper.mastermessagingprotocol.messages.serverbound.*;
++import io.netty.channel.Channel;
++import io.netty.channel.ChannelHandler;
++import io.netty.channel.ChannelHandlerContext;
++import io.netty.channel.socket.SocketChannel;
++import org.apache.logging.log4j.LogManager;
++import org.apache.logging.log4j.Logger;
++
++import java.util.Map;
++import java.util.Set;
++import java.util.UUID;
++import java.util.concurrent.CompletableFuture;
++import java.util.concurrent.ConcurrentHashMap;
++import java.util.concurrent.TimeUnit;
++import java.util.function.Consumer;
++
++@ChannelHandler.Sharable
++public class MultiPaperConnection extends ServerBoundMessageHandler {
++    private static final Logger LOGGER = LogManager.getLogger(MultiPaperConnection.class.getSimpleName());
++    private static final UUID thisServersUuid = UUID.randomUUID();
++    private static final long PING_TIMEOUT = Long.getLong("multipaper.master.pingtimeout", 60 * 1000L);
++
++    private final String myName;
++    private final MessageBootstrap<ServerBoundMessage, MasterBoundMessage> bootstrap;
++    private final Set<MasterBoundMessage> unhandledRequests = ConcurrentHashMap.newKeySet();
++    private final Map<String, ExternalServer> serversMap = new ConcurrentHashMap<>();
++    private SocketChannel channel;
++    private boolean channelActive = false;
++    private long lastPingReceived;
++
++    public MultiPaperConnection() {
++        System.setProperty("multipaper.netty.threads", System.getProperty("multipaper.netty.threads", Integer.toString(Math.min(Runtime.getRuntime().availableProcessors(), 3))));
++        myName = MultiPaperConfiguration.get().masterConnection.myName;
++        bootstrap = new MessageBootstrap<>(new ServerBoundProtocol(), new MasterBoundProtocol(), channel -> channel.pipeline().addLast(this));
++        MessageBootstrap.getEventLoopGroup().scheduleAtFixedRate(this::ping, 0, PING_TIMEOUT / 4, TimeUnit.MILLISECONDS);
++        connect();
++    }
++
++    public void connect() {
++        String server = MultiPaperConfiguration.get().masterConnection.masterAddress;
++        LOGGER.info("Connecting to " + server + "...");
++        String[] serverParts = server.split(":");
++        bootstrap.connectTo(serverParts[0], Integer.parseInt(serverParts[1])).addListener(future -> {
++            if (future.cause() != null) {
++                CompletableFuture.delayedExecutor(1, TimeUnit.SECONDS).execute(this::connect);
++            }
++        });
++    }
++
++    public Channel getChannel() {
++        return channel;
++    }
++
++    @Override
++    public void channelActive(ChannelHandlerContext ctx) {
++        channel = (SocketChannel) ctx.channel();
++        LOGGER.info("Connected to " + channel.remoteAddress());
++        channel.write(new HelloMessage(myName, thisServersUuid));
++        for (MasterBoundMessage unhandledRequest : unhandledRequests) {
++            channel.write(unhandledRequest);
++
++        }
++        lastPingReceived = System.currentTimeMillis();
++        channelActive = true;
++        channel.flush();
++    }
++
++    @Override
++    public void channelInactive(ChannelHandlerContext ctx) {
++        channelActive = false;
++        LOGGER.info("Lost connection to " + ((SocketChannel) ctx.channel()).remoteAddress());
++        connect();
++
++    }
++
++    private void waitForActiveChannel() {
++        while (channel == null || !channel.isActive() || !channelActive) {
++            // Wait for channel to become active
++            try {
++                Thread.sleep(50);
++            } catch (InterruptedException e) {
++                e.printStackTrace();
++            }
++        }
++    }
++
++    public void ping() {
++        if (!channelActive) return;
++
++        if (System.currentTimeMillis() - lastPingReceived > PING_TIMEOUT) {
++            LOGGER.error("Keep-alive ping timed out after {}ms, initiating master reconnect...", System.currentTimeMillis() - lastPingReceived);
++            channelActive = false;
++            channel.close();
++            return;
++        }
++
++        send(new PingMessage(), message -> {
++            lastPingReceived = System.currentTimeMillis();
++        });
++    }
++
++    public void send(MasterBoundMessage message) {
++        waitForActiveChannel();
++        channel.writeAndFlush(message);
++    }
++
++    public void send(MasterBoundMessage message, Consumer<ServerBoundMessage> callback) {
++        waitForActiveChannel();
++        unhandledRequests.add(message);
++        send(setCallback(message, reply -> {
++            unhandledRequests.remove(message);
++            callback.accept(reply);
++
++        }));
++    }
++
++    public Map<String, ExternalServer> getServersMap() {
++        return serversMap;
++    }
++
++    @Override
++    public void handle(ServerInfoUpdateMessage message) {
++        ExternalServer server = serversMap.computeIfAbsent(message.name, key -> new ExternalServer(key, key.equals(myName)));
++        server.setAverageTickTime(message.averageTickTime);
++        server.setTps(message.tps);
++        server.setLastAlive(System.currentTimeMillis());
++    }
++
++    @Override
++    public void handle(SetSecretMessage message) {
++
++    }
++
++    @Override
++    public void handle(ShutdownMessage message) {
++
++    }
++
++    @Override
++    public void handle(ServerChangedChunkStatusMessage message) {
++
++    }
++
++    @Override
++    public void handle(FileContentMessage message) {
++
++    }
++
++    @Override
++    public void handle(SetChunkOwnerMessage message) {
++
++    }
++
++    @Override
++    public void handle(ServerStartedMessage message) {
++
++    }
++
++    @Override
++    public void handle(DataUpdateMessage message) {
++
++    }
++
++    @Override
++    public void handle(AddChunkSubscriberMessage message) {
++
++    }
++
++    @Override
++    public void handle(RemoveChunkSubscriberMessage message) {
++
++    }
++
++    @Override
++    public void handle(AddEntitySubscriberMessage message) {
++
++    }
++
++    @Override
++    public void handle(RemoveEntitySubscriberMessage message) {
++
++    }
++
++    @Override
++    public void handle(ChunkSubscribersSyncMessage message) {
++
++    }
++
++    @Override
++    public void handle(EntitySubscribersSyncMessage message) {
++
++    }
++}

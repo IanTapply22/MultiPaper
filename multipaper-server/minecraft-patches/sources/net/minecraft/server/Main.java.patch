@@ -1,20 +1,22 @@
 --- a/net/minecraft/server/Main.java
 +++ b/net/minecraft/server/Main.java
-@@ -1,5 +_,7 @@
+@@ -1,5 +_,8 @@
  package net.minecraft.server;
  
++import com.iantapply.multipaper.MultiPaper;
 +import com.iantapply.multipaper.config.MultiPaperConfiguration;
 +import com.iantapply.multipaper.config.MultiPaperConfigurationLoader;
  import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
  import com.mojang.datafixers.DataFixer;
  import com.mojang.logging.LogUtils;
-@@ -104,6 +_,9 @@
+@@ -104,6 +_,10 @@
              if (optionSet.has("jfrProfile")) { // CraftBukkit
                  JvmProfiler.INSTANCE.start(Environment.SERVER);
              }
 +
 +            MultiPaperConfigurationLoader.init((File) optionSet.valueOf("multipaper-settings")); // MultiPaper
 +            System.setProperty("multipaper.master-connection.my-name", MultiPaperConfiguration.get().masterConnection.myName); // MultiPaper - remember this property even after config reloads
++            MultiPaper.getConnection(); // MultiPaper - start connection
  
              io.papermc.paper.plugin.PluginInitializerManager.load(optionSet); // Paper
              Bootstrap.bootStrap();

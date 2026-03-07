@@ -40,11 +40,12 @@
  configurations.named(log4jPlugins.compileClasspathConfigurationName) {
      extendsFrom(configurations.compileClasspath.get())
  }
-@@ -127,7 +_,7 @@
+@@ -127,7 +_,8 @@
  }
  
  dependencies {
 -    implementation(project(":paper-api"))
++    implementation(project(":multipaper-master-messaging-protocol")) // MultiPaper
 +    implementation(project(":multipaper-api"))
      implementation("ca.spottedleaf:concurrentutil:0.0.8")
      implementation("org.jline:jline-terminal-ffm:3.27.1") // use ffm on java 22+
